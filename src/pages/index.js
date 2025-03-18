@@ -18,6 +18,7 @@ import {
   Icon,
   Divider,
   Badge,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { FiHome, FiDollarSign, FiTrendingUp, FiCalendar, FiClock } from 'react-icons/fi';
 import {
@@ -128,13 +129,21 @@ const COLORS = ['#3182CE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('month');
-
+  const headingSize = useBreakpointValue({ base: 'md', md: 'lg' });
+  const chartHeight = useBreakpointValue({ base: 250, md: 300 });
+  
   return (
-    <Box>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg">Dashboard</Heading>
+    <Box maxW="100%">
+      <Flex 
+        direction={{ base: 'column', md: 'row' }} 
+        justify="space-between" 
+        align={{ base: 'start', md: 'center' }} 
+        mb={{ base: 4, md: 6 }}
+        gap={4}
+      >
+        <Heading size={headingSize}>Dashboard</Heading>
         <Select 
-          w="200px"
+          maxW={{ base: "100%", md: "200px" }}
           value={timeRange}
           onChange={(e) => setTimeRange(e.target.value)}
         >
@@ -146,10 +155,14 @@ export default function Dashboard() {
       </Flex>
 
       {/* Stat Cards */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+      <SimpleGrid 
+        columns={{ base: 1, sm: 2, lg: 4 }} 
+        spacing={{ base: 3, md: 6 }} 
+        mb={{ base: 6, md: 8 }}
+      >
         {statCards.map((stat, index) => (
-          <Card key={index}>
-            <CardBody>
+          <Card key={index} shadow="sm">
+            <CardBody padding={{ base: 3, md: 4 }}>
               <Flex align="center">
                 <Box
                   mr={4}
@@ -158,12 +171,12 @@ export default function Dashboard() {
                   bg={stat.color + '.50'}
                   color={stat.color}
                 >
-                  <Icon as={stat.icon} boxSize={6} />
+                  <Icon as={stat.icon} boxSize={{ base: 5, md: 6 }} />
                 </Box>
                 <Stat>
-                  <StatLabel fontWeight="medium">{stat.label}</StatLabel>
-                  <StatNumber>{stat.value}</StatNumber>
-                  <StatHelpText>
+                  <StatLabel fontWeight="medium" fontSize={{ base: 'xs', md: 'sm' }}>{stat.label}</StatLabel>
+                  <StatNumber fontSize={{ base: 'lg', md: 'xl' }}>{stat.value}</StatNumber>
+                  <StatHelpText fontSize={{ base: 'xs', md: 'sm' }} mb={0}>
                     <StatArrow type={stat.changeType} />
                     {stat.change}% {stat.changeType === 'increase' ? 'more' : 'less'}
                   </StatHelpText>
@@ -175,21 +188,25 @@ export default function Dashboard() {
       </SimpleGrid>
 
       {/* Charts */}
-      <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={6} mb={8}>
-        <Card>
-          <CardBody>
-            <Heading size="md" mb={4}>Monthly Listings</Heading>
-            <Box h="300px">
+      <Grid 
+        templateColumns={{ base: '1fr', lg: '2fr 1fr' }} 
+        gap={{ base: 4, md: 6 }} 
+        mb={{ base: 6, md: 8 }}
+      >
+        <Card shadow="sm">
+          <CardBody padding={{ base: 3, md: 4 }}>
+            <Heading size="sm" mb={{ base: 3, md: 4 }}>Monthly Listings</Heading>
+            <Box h={chartHeight}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={monthlyListingsData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                   <Bar dataKey="sales" name="For Sale" fill="#3182CE" />
                   <Bar dataKey="rentals" name="For Rent" fill="#00C49F" />
                 </BarChart>
@@ -198,10 +215,10 @@ export default function Dashboard() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody>
-            <Heading size="md" mb={4}>Property Types</Heading>
-            <Box h="300px">
+        <Card shadow="sm">
+          <CardBody padding={{ base: 3, md: 4 }}>
+            <Heading size="sm" mb={{ base: 3, md: 4 }}>Property Types</Heading>
+            <Box h={chartHeight}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -209,8 +226,11 @@ export default function Dashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
+                    label={({ name, percent }) => useBreakpointValue({
+                      base: `${(percent * 100).toFixed(0)}%`,
+                      md: `${name}: ${(percent * 100).toFixed(0)}%`
+                    })}
+                    outerRadius={useBreakpointValue({ base: 60, md: 80 })}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -227,72 +247,43 @@ export default function Dashboard() {
       </Grid>
 
       {/* Recent Listings */}
-      <Card mb={8}>
-        <CardBody>
-          <Heading size="md" mb={4}>Recent Listings</Heading>
-          <Stack spacing={4} divider={<Divider />}>
+      <Card shadow="sm" mb={8}>
+        <CardBody padding={{ base: 3, md: 4 }}>
+          <Heading size="sm" mb={{ base: 3, md: 4 }}>Recent Listings</Heading>
+          <Stack spacing={{ base: 3, md: 4 }} divider={<Divider />}>
             {recentListings.map((listing, index) => (
-              <Flex key={index} justify="space-between" align="center">
+              <Flex 
+                key={index} 
+                direction={{ base: 'column', sm: 'row' }}
+                justify="space-between" 
+                align={{ base: 'start', sm: 'center' }}
+                gap={{ base: 2, sm: 0 }}
+              >
                 <Box>
-                  <Text fontWeight="medium">{listing.name}</Text>
-                  <Text fontSize="sm" color="gray.600">{listing.id}</Text>
+                  <Text fontWeight="medium" fontSize={{ base: 'sm', md: 'md' }}>{listing.name}</Text>
+                  <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.600">{listing.id}</Text>
                 </Box>
-                <Box>
-                  <Text fontWeight="bold">{listing.price}</Text>
+                <Flex 
+                  direction={{ base: 'row', md: 'row' }}
+                  align={{ base: 'center', md: 'center' }}
+                  mt={{ base: 1, sm: 0 }}
+                  wrap="wrap"
+                  gap={2}
+                >
+                  <Text fontWeight="bold" fontSize={{ base: 'sm', md: 'md' }}>{listing.price}</Text>
                   <Badge
                     colorScheme={listing.type === 'For Sale' ? 'blue' : 'green'}
-                    mr={2}
+                    fontSize={{ base: 'xs', md: 'sm' }}
                   >
                     {listing.type}
                   </Badge>
-                  <Text fontSize="sm" color="gray.500" as="span">
+                  <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.500" as="span">
                     {listing.date}
                   </Text>
-                </Box>
+                </Flex>
               </Flex>
             ))}
           </Stack>
-        </CardBody>
-      </Card>
-
-      {/* Agent Performance */}
-      <Card>
-        <CardBody>
-          <Heading size="md" mb={4}>Agent Performance</Heading>
-          <Box h="300px">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={[
-                  { month: 'Jan', listings: 5, sales: 2 },
-                  { month: 'Feb', listings: 7, sales: 3 },
-                  { month: 'Mar', listings: 10, sales: 4 },
-                  { month: 'Apr', listings: 8, sales: 5 },
-                  { month: 'May', listings: 12, sales: 6 },
-                  { month: 'Jun', listings: 15, sales: 8 },
-                ]}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="listings"
-                  name="New Listings"
-                  stroke="#3182CE"
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  name="Sales Closed"
-                  stroke="#FF8042"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Box>
         </CardBody>
       </Card>
     </Box>
