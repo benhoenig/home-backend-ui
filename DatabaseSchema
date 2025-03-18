@@ -1,0 +1,169 @@
+-- Enumerations
+CREATE TYPE marketing_status AS ENUM (
+  'พร้อมประกาศ',
+  'เอาประกาศออก (ชั่วคราว)',
+  'ขายแล้ว',
+  'เอาประกาศออก (ถาวร)'
+);
+
+CREATE TYPE listing_type AS ENUM (
+  'Normal List',
+  'A List',
+  'Exclusive List'
+);
+
+CREATE TYPE listing_status AS ENUM (
+  'For Sale',
+  'For Rent',
+  'For Sale & Rent',
+  'ขายพร้อมผู้เช่า',
+  'ขายดาวน์'
+);
+
+CREATE TYPE project_location AS ENUM (
+  'ในโครงการ',
+  'นอกโครงการ'
+);
+
+CREATE TYPE view_direction AS ENUM (
+  'North',
+  'South',
+  'East',
+  'West',
+  'Northeast',
+  'Northwest',
+  'Southeast',
+  'Southwest'
+);
+
+-- Tables
+CREATE TABLE owners (
+  owner_id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  contact_info VARCHAR(255)
+);
+
+CREATE TABLE projects (
+  project_id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT
+);
+
+CREATE TABLE zones (
+  zone_id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE stations (
+  station_id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(50) NOT NULL,  -- BTS, MRT, ARL
+  location_coordinates POINT
+);
+
+CREATE TABLE users (
+  user_id SERIAL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE listings (
+  listing_id SERIAL PRIMARY KEY,
+  listing_code VARCHAR(50) UNIQUE NOT NULL,
+  listing_name VARCHAR(255) GENERATED ALWAYS AS (
+    CASE
+      WHEN project_id IS NOT NULL THEN (SELECT name FROM projects WHERE project_id = listings.project_id)
+      ELSE property_type || ' at ' || (SELECT name FROM zones WHERE zone_id = listings.zone_id)
+    END
+  ) STORED,
+  
+  -- Status fields
+  marketing_status marketing_status,
+  listing_type listing_type,
+  listing_status listing_status,
+  project_location project_location,
+  
+  -- Relationships
+  owner_id INTEGER REFERENCES owners(owner_id),
+  project_id INTEGER REFERENCES projects(project_id),
+  zone_id INTEGER REFERENCES zones(zone_id),
+  bts_id INTEGER REFERENCES stations(station_id),
+  mrt_id INTEGER REFERENCES stations(station_id),
+  arl_id INTEGER REFERENCES stations(station_id),
+  created_by INTEGER REFERENCES users(user_id),
+  assigned_to INTEGER REFERENCES users(user_id),
+  
+  -- Property details
+  property_type VARCHAR(100),
+  location_grade VARCHAR(50),
+  bedroom SMALLINT,
+  bathroom SMALLINT,
+  unit_no VARCHAR(50),
+  ไร่ DECIMAL(10,2),
+  งาน DECIMAL(10,2),
+  วา DECIMAL(10,2),
+  พื้นที่ใช้สอย DECIMAL(10,2),
+  พื้นที่ DECIMAL(10,2),
+  จำนวนชั้น SMALLINT,
+  building VARCHAR(100),
+  อยู่ชั้นที่ VARCHAR(50),
+  ที่จอดรถ VARCHAR(50),
+  view view_direction,
+  direction view_direction[],
+  matching_tags matching_tags[],
+  
+  -- Prices
+  asking_price DECIMAL(15,2),
+  rental_price DECIMAL(15,2),
+  ราคารับ_net DECIMAL(15,2),
+  price_per_sqm DECIMAL(15,2) GENERATED ALWAYS AS (
+    asking_price / พื้นที่ใช้สอย
+  ) STORED,
+  price_per_area_used DECIMAL(15,2) GENERATED ALWAYS AS (
+    asking_price / พื้นที่ใช้สอย
+  ) STORED,
+  
+  -- Additional info
+  google_maps_link TEXT,
+  remark TEXT,
+  
+  -- Timestamps
+  created_time TIMESTAMP NOT NULL DEFAULT NOW(),
+  last_modified_time TIMESTAMP NOT NULL DEFAULT NOW(),
+  months_on_sale INTEGER GENERATED ALWAYS AS (
+    EXTRACT(MONTH FROM AGE(NOW(), created_time))
+  ) STORED
+);
+
+CREATE TABLE listing_photos (
+  photo_id SERIAL PRIMARY KEY,
+  listing_id INTEGER REFERENCES listings(listing_id),
+  file_path VARCHAR(255) NOT NULL,
+  description VARCHAR(255),
+  is_primary BOOLEAN DEFAULT FALSE,
+  upload_time TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE matching_tags (
+  tag_id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT
+);
+
+CREATE TABLE listing_tags (
+  listing_id INTEGER REFERENCES listings(listing_id),
+  tag_id INTEGER REFERENCES matching_tags(tag_id),
+  PRIMARY KEY (listing_id, tag_id)
+);
+
+-- Create index for better performance
+CREATE INDEX idx_listings_owner ON listings(owner_id);
+CREATE INDEX idx_listings_project ON listings(project_id);
+CREATE INDEX idx_listings_zone ON listings(zone_id);
+CREATE INDEX idx_listings_status ON listings(listing_status);
+CREATE INDEX idx_listings_marketing_status ON listings(marketing_status);
+CREATE INDEX idx_listings_type ON listings(listing_type);
