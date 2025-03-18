@@ -131,14 +131,23 @@ export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('month');
   const headingSize = useBreakpointValue({ base: 'md', md: 'lg' });
   const chartHeight = useBreakpointValue({ base: 250, md: 300 });
+  const pieChartLabelFormat = useBreakpointValue({
+    base: "percentage",
+    md: "full"
+  });
+  const pieChartSize = useBreakpointValue({ base: 70, md: 90 });
   
   return (
-    <Box maxW="100%">
+    <Box 
+      maxW="1400px" 
+      mx="auto" 
+      px={{ base: 4, md: 6 }}
+    >
       <Flex 
         direction={{ base: 'column', md: 'row' }} 
         justify="space-between" 
         align={{ base: 'start', md: 'center' }} 
-        mb={{ base: 4, md: 6 }}
+        mb={{ base: 6, md: 8 }}
         gap={4}
       >
         <Heading size={headingSize}>Dashboard</Heading>
@@ -157,26 +166,26 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <SimpleGrid 
         columns={{ base: 1, sm: 2, lg: 4 }} 
-        spacing={{ base: 3, md: 6 }} 
-        mb={{ base: 6, md: 8 }}
+        spacing={{ base: 5, md: 8 }} 
+        mb={{ base: 8, md: 10 }}
       >
         {statCards.map((stat, index) => (
           <Card key={index} shadow="sm">
-            <CardBody padding={{ base: 3, md: 4 }}>
+            <CardBody padding={{ base: 5, md: 6 }}>
               <Flex align="center">
                 <Box
                   mr={4}
-                  p={2}
+                  p={3}
                   borderRadius="lg"
                   bg={stat.color + '.50'}
                   color={stat.color}
                 >
-                  <Icon as={stat.icon} boxSize={{ base: 5, md: 6 }} />
+                  <Icon as={stat.icon} boxSize={{ base: 6, md: 7 }} />
                 </Box>
                 <Stat>
-                  <StatLabel fontWeight="medium" fontSize={{ base: 'xs', md: 'sm' }}>{stat.label}</StatLabel>
-                  <StatNumber fontSize={{ base: 'lg', md: 'xl' }}>{stat.value}</StatNumber>
-                  <StatHelpText fontSize={{ base: 'xs', md: 'sm' }} mb={0}>
+                  <StatLabel fontWeight="medium" fontSize={{ base: 'sm', md: 'md' }}>{stat.label}</StatLabel>
+                  <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{stat.value}</StatNumber>
+                  <StatHelpText fontSize={{ base: 'sm', md: 'md' }} mb={0}>
                     <StatArrow type={stat.changeType} />
                     {stat.change}% {stat.changeType === 'increase' ? 'more' : 'less'}
                   </StatHelpText>
@@ -190,12 +199,12 @@ export default function Dashboard() {
       {/* Charts */}
       <Grid 
         templateColumns={{ base: '1fr', lg: '2fr 1fr' }} 
-        gap={{ base: 4, md: 6 }} 
-        mb={{ base: 6, md: 8 }}
+        gap={{ base: 6, md: 8 }} 
+        mb={{ base: 8, md: 10 }}
       >
         <Card shadow="sm">
-          <CardBody padding={{ base: 3, md: 4 }}>
-            <Heading size="sm" mb={{ base: 3, md: 4 }}>Monthly Listings</Heading>
+          <CardBody padding={{ base: 5, md: 6 }}>
+            <Heading size="md" mb={{ base: 4, md: 5 }}>Monthly Listings</Heading>
             <Box h={chartHeight}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -216,8 +225,8 @@ export default function Dashboard() {
         </Card>
 
         <Card shadow="sm">
-          <CardBody padding={{ base: 3, md: 4 }}>
-            <Heading size="sm" mb={{ base: 3, md: 4 }}>Property Types</Heading>
+          <CardBody padding={{ base: 5, md: 6 }}>
+            <Heading size="md" mb={{ base: 4, md: 5 }}>Property Types</Heading>
             <Box h={chartHeight}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -226,11 +235,12 @@ export default function Dashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => useBreakpointValue({
-                      base: `${(percent * 100).toFixed(0)}%`,
-                      md: `${name}: ${(percent * 100).toFixed(0)}%`
-                    })}
-                    outerRadius={useBreakpointValue({ base: 60, md: 80 })}
+                    label={({ name, percent }) => {
+                      return pieChartLabelFormat === "full" 
+                        ? `${name}: ${(percent * 100).toFixed(0)}%`
+                        : `${(percent * 100).toFixed(0)}%`;
+                    }}
+                    outerRadius={pieChartSize}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -248,36 +258,38 @@ export default function Dashboard() {
 
       {/* Recent Listings */}
       <Card shadow="sm" mb={8}>
-        <CardBody padding={{ base: 3, md: 4 }}>
-          <Heading size="sm" mb={{ base: 3, md: 4 }}>Recent Listings</Heading>
-          <Stack spacing={{ base: 3, md: 4 }} divider={<Divider />}>
+        <CardBody padding={{ base: 5, md: 6 }}>
+          <Heading size="md" mb={{ base: 4, md: 5 }}>Recent Listings</Heading>
+          <Stack spacing={{ base: 4, md: 5 }} divider={<Divider />}>
             {recentListings.map((listing, index) => (
               <Flex 
                 key={index} 
                 direction={{ base: 'column', sm: 'row' }}
                 justify="space-between" 
                 align={{ base: 'start', sm: 'center' }}
-                gap={{ base: 2, sm: 0 }}
+                gap={{ base: 3, sm: 0 }}
               >
                 <Box>
-                  <Text fontWeight="medium" fontSize={{ base: 'sm', md: 'md' }}>{listing.name}</Text>
-                  <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.600">{listing.id}</Text>
+                  <Text fontWeight="medium" fontSize={{ base: 'md', md: 'lg' }}>{listing.name}</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600">{listing.id}</Text>
                 </Box>
                 <Flex 
                   direction={{ base: 'row', md: 'row' }}
                   align={{ base: 'center', md: 'center' }}
-                  mt={{ base: 1, sm: 0 }}
+                  mt={{ base: 2, sm: 0 }}
                   wrap="wrap"
-                  gap={2}
+                  gap={3}
                 >
-                  <Text fontWeight="bold" fontSize={{ base: 'sm', md: 'md' }}>{listing.price}</Text>
+                  <Text fontWeight="bold" fontSize={{ base: 'md', md: 'lg' }}>{listing.price}</Text>
                   <Badge
                     colorScheme={listing.type === 'For Sale' ? 'blue' : 'green'}
-                    fontSize={{ base: 'xs', md: 'sm' }}
+                    fontSize={{ base: 'sm', md: 'md' }}
+                    px={2}
+                    py={1}
                   >
                     {listing.type}
                   </Badge>
-                  <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.500" as="span">
+                  <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.500" as="span">
                     {listing.date}
                   </Text>
                 </Flex>
